@@ -20,7 +20,7 @@ class Player:
 	# exponential. Will look up how to optimize the search tree later.
 
 	def moveLogic(self, connectedDotsSet, possConnections, squares, currentRects):
-		solution = self.recursiveBruteForce(connectedDotsSet, possConnections, squares,currentRects,True, 0, float("-inf"), float("inf"))
+		solution = self.recursiveBruteForce(connectedDotsSet, possConnections, squares,currentRects,True, 0, (None, float("-inf")), (None, float("inf")))
 		if solution is not None:
 			return solution[0]
 
@@ -32,20 +32,23 @@ class Player:
 				utility_cpy = currentMaxxerUtility
 				cpy_connectedDotsSet = set(connectedDotsSet)
 				cpy_connectedDotsSet.add(connection)
+				rectsToDraw_cpy = set(rectsToDraw)
 				#check if we make a square with this hypothetical move, if so increase utility of this path
 				for square in squares:
 					c1, c2, c3, c4 = square[0]
 					if (c1 in cpy_connectedDotsSet) and (c2 in cpy_connectedDotsSet) and (c3 in cpy_connectedDotsSet) and (c4 in cpy_connectedDotsSet):
-						if tuple(square[1]) not in rectsToDraw:
+						if tuple(square[1]) not in rectsToDraw_cpy:
 							if MaxTurn:
 								utility_cpy += 1
 							else:
 								utility_cpy -= 1
+							rectsToDraw_cpy.add(tuple(square[1]))
 							
 				return (connection, utility_cpy)
 
 		elif len(possConnections) > 1:
 			connDict = dict()
+			returConn = None
 			for connection in possConnections:
 				repeatTurn = False
 				MaxTurn = MaxTurnLoc
@@ -74,17 +77,16 @@ class Player:
 				if repeatTurn:
 					MaxTurn = not MaxTurn
 
-				recurTup = self.recursiveBruteForce(cpy_connectedDotsSet, cpy_possConnections, squares, rectsToDraw_cpy, utility_cpy, not MaxTurn, alpha, beta)
+				recurTup = self.recursiveBruteForce(cpy_connectedDotsSet, cpy_possConnections, squares, rectsToDraw_cpy, utility_cpy, not MaxTurn, (returConn, alpha), (returConn,beta))
 				connDict[connection] = recurTup[1]				
 				# if MaxTurn:
-				# 	if recurTup[1] > alpha:
-				# 		alpha = recurTup[1]
+				# 	if recurTup[1] > alpha[1]:
+				# 		alpha = (connection, recurTup[1])
 				# 	if beta <= alpha:
 				# 		break
 				# else:
-				# 	if recurTup[1] < beta:
-				# 		beta = recurTup[1]
-				# 		connToReturn = connection
+				# 	if recurTup[1] < beta[1]:
+				# 		beta = (connection, recurTup[1])
 				# 	if beta <= alpha:
 				# 		break
 
